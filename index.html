@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><title>归因风格问卷</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f7f6f2;--fg:#222;--card:#fff;--mut:#666;--ac:#2f6f5e;--bd:#ddd}
+@media (prefers-color-scheme:dark){:root{--bg:#1c1d1d;--fg:#eee;--card:#262828;--mut:#aaa;--ac:#6fc4ad;--bd:#444}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:680px;margin:0 auto;padding:20px 16px 60px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin:14px 0}
+.m{color:var(--mut);font-size:14px}
+.ev{font-size:18px;font-weight:600}
+textarea{width:100%;min-height:64px;border:1px solid var(--bd);border-radius:8px;padding:8px;background:var(--bg);color:var(--fg);font:inherit}
+.sc{display:flex;gap:4px;margin-top:6px}
+.sc label{flex:1;text-align:center;border:1px solid var(--bd);border-radius:8px;padding:8px 0;cursor:pointer}
+.sc input{display:none}.sc label:has(input:checked){background:var(--ac);color:#fff;border-color:var(--ac)}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-top:2px}
+button{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:12px 24px;font-size:16px;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}button.s{background:none;color:var(--ac);border:1px solid var(--ac)}
+.pg{height:6px;background:var(--bd);border-radius:3px;overflow:hidden}.pg i{display:block;height:100%;background:var(--ac);transition:width .2s}
+table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left}
+</style></head><body><main><div id="app"></div>
+<script>
+/* ===== 可编辑配置 ===== */
+const TITLE="归因风格问卷";
+const INTRO="下面有一系列假想的情境。请想象每件事真的发生在你身上，写下你认为<b>最可能的一个原因</b>，再回答三个问题。没有对错之分，请凭第一直觉作答。约需 10–15 分钟。";
+const EVENTS=["你的考试成绩不理想。","你和好朋友发生了激烈的争吵。","你申请的奖学金或荣誉没有通过。","你在众人面前发言时出了错。","你没有被邀请参加大家的集体活动。","你精心准备的作业或方案被否定了。","你错过了一个重要的截止日期。","你在比赛或竞选中落败。","你与亲近的人关系出现了裂痕。","你与新认识的人相处得不融洽。","你学一项新技能，进步非常慢。","你向别人求助，却被拒绝了。","你因为一个错误受到批评。","你在小组合作中被同伴埋怨。","你身体不适，影响了正常的学习或工作。","你计划好的事情被意外打乱了。","你在面试或答辩中表现不好。","你的努力没有得到应有的回报。","你被朋友误解了。","你弄丢了一件重要的东西。","你坚持了很久的计划中途放弃了。","你在陌生的环境里感到格格不入。","你的意见在讨论中没有被采纳。","你花了很多时间准备的事情最后失败了。"];
+const QS=[["这个原因是出在你自己身上，还是出在别人或环境上？","完全在别人或环境","完全在我自己"],
+["以后再遇到类似的情况，这个原因还会存在吗？","绝不会再存在","一定还会存在"],
+["这个原因只会影响这类情况，还是也会影响你生活的其他方面？","只影响这类情况","影响我生活的所有方面"]];
+/* ===== 逻辑 ===== */
+const N=EVENTS.length,ans=EVENTS.map(()=>({c:"",r:[0,0,0]}));let i=-1;
+const $=document.getElementById("app");
+function start(){$.innerHTML=`<h1>${TITLE}</h1><div class="card">${INTRO}<p class="m">你的作答只在本页面内处理，不会上传。</p></div><button onclick="i=0;show()">开始</button>`}
+function show(){const a=ans[i];
+let h=`<div class="pg"><i style="width:${i/N*100}%"></i></div><p class="m">${i+1} / ${N}</p><div class="card"><div class="ev">${EVENTS[i]}</div><p class="m">请写下最可能的一个原因：</p><textarea id="c">${a.c}</textarea></div>`;
+QS.forEach((q,j)=>{h+=`<div class="card">${q[0]}<div class="sc">`;
+for(let k=1;k<=7;k++)h+=`<label><input type="radio" name="q${j}" value="${k}" ${a.r[j]==k?"checked":""} onchange="ans[i].r[${j}]=${k};chk()">${k}</label>`;
+h+=`</div><div class="ends"><span>1 ${q[1]}</span><span>7 ${q[2]}</span></div></div>`});
+h+=`<button class="s" ${i?"":"disabled"} onclick="sv();i--;show()">上一题</button> <button id="nx" onclick="sv();${i==N-1?"done()":"i++;show()"}">${i==N-1?"提交":"下一题"}</button>`;
+$.innerHTML=h;chk();scrollTo(0,0)}
+function sv(){ans[i].c=document.getElementById("c").value}
+function chk(){document.getElementById("nx").disabled=ans[i].r.includes(0)}
+function mean(x){return x.reduce((s,v)=>s+v,0)/x.length}
+function done(){const d=[0,1,2].map(j=>mean(ans.map(a=>a.r[j]))),cp=mean(d);
+const out={dimension_1_internality:+d[0].toFixed(2),dimension_2_stability:+d[1].toFixed(2),dimension_3_globality:+d[2].toFixed(2),composite:+cp.toFixed(2),items:ans.map((a,k)=>({event:k+1,cause:a.c,internal:a.r[0],stable:a.r[1],global:a.r[2]}))};
+window.OUT=out;
+$.innerHTML=`<h1>结果</h1><div class="card"><table><tr><th>指标</th><th>均分（1–7）</th></tr>
+<tr><td>内外归因（内在性）</td><td>${d[0].toFixed(2)}</td></tr><tr><td>稳定性</td><td>${d[1].toFixed(2)}</td></tr><tr><td>全局性</td><td>${d[2].toFixed(2)}</td></tr><tr><td><b>负性事件综合分</b></td><td><b>${cp.toFixed(2)}</b></td></tr></table>
+<p class="m">分数越高，表示越倾向把坏事归因于内在、稳定、全局的原因（更接近悲观解释风格）。本工具未附常模，请结合所用常模或研究样本解释，结果不能用于临床诊断。</p></div>
+<button onclick="navigator.clipboard.writeText(JSON.stringify(OUT,null,2)).then(()=>this.textContent='已复制')">复制结果（JSON）</button> <button class="s" onclick="location.reload()">重新作答</button>`;scrollTo(0,0)}
+start();
+</script></main></body></html>
